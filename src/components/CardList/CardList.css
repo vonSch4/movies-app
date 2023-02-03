@@ -1,0 +1,17 @@
+.card-list {
+  width: 75%;
+  margin: 0 auto;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(500px, 1fr));
+  gap: 30px;
+  justify-items: center;
+}
+
+.pagination {
+  margin-bottom: 30px;
+}
+
+.ant-pagination-item {
+  font-family: 'Montserrat', sans-serif;
+}

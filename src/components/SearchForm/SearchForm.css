@@ -1,0 +1,17 @@
+form {
+  text-align: center;
+}
+
+.search-field {
+  background-color: inherit;
+  font-size: 28px;
+  width: 75%;
+  height: 60px;
+  padding: 0 20px;
+  border-radius: 5px;
+  border: 2px solid grey;
+}
+
+.search-field:focus-visible {
+  outline: none;
+}

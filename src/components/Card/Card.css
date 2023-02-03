@@ -1,0 +1,49 @@
+.card {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-areas:
+    'a a b b b'
+    'a a b b b'
+    'a a b b b';
+  box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.ant-image {
+  border-radius: 10px;
+  grid-area: a;
+  /* width: 100%; */
+  /* height: 350px; */
+}
+
+.poster-img {
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.ant-image-mask {
+  border-radius: 10px;
+}
+
+.movie-info {
+  grid-area: b;
+  font-family: 'Montserrat', sans-serif;
+  margin: 25px;
+  margin-top: 10px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.date {
+  display: block;
+  color: grey;
+  margin-bottom: 10px;
+}
+
+.tags {
+  margin-bottom: 10px;
+}
