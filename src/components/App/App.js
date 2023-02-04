@@ -1,6 +1,5 @@
 import React from 'react';
 import { Offline, Online } from 'react-detect-offline';
-import _ from 'lodash';
 
 import './App.css';
 
@@ -25,8 +24,6 @@ const err = {
 export default class App extends React.Component {
   movieService = new MovieService();
 
-  debouncedGetData = _.debounce(this.getData, 500);
-
   constructor(props) {
     super(props);
     this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
@@ -37,29 +34,38 @@ export default class App extends React.Component {
       data: {},
       isLoading: true,
       isError: false,
-      value: 'green',
+      value: null,
       currentPage: 1,
     };
   }
 
   componentDidMount() {
-    const { value } = this.state;
+    const { currentPage } = this.state;
 
-    this.getData(value);
+    this.getPopularMovies(currentPage);
   }
 
   componentDidUpdate(prevProps, prevState) {
     const { value, currentPage } = this.state;
 
+    if (!value && prevState.currentPage !== currentPage) {
+      this.getPopularMovies(currentPage);
+
+      this.setState(() => {
+        return { isLoading: true, isError: false };
+      });
+    }
+
     if (prevState.value !== value) {
-      this.debouncedGetData(value, currentPage);
+      this.getFoundMovies(value, currentPage);
 
       this.setState(() => {
         return { isLoading: true, isError: false, currentPage: 1 };
       });
     }
-    if (prevState.currentPage !== currentPage) {
-      this.debouncedGetData(value, currentPage);
+
+    if (value && prevState.currentPage !== currentPage) {
+      this.getFoundMovies(value, currentPage);
 
       this.setState(() => {
         return { isLoading: true, isError: false };
@@ -87,9 +93,15 @@ export default class App extends React.Component {
     });
   }
 
-  getData(value, page) {
+  getFoundMovies(value, page) {
     this.movieService
       .getMovies(value, page)
+      .then(this.onMoviesLoaded, this.onErrorLoading);
+  }
+
+  getPopularMovies(page) {
+    this.movieService
+      .getPopularMovies(page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 

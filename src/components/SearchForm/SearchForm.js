@@ -1,8 +1,11 @@
 import React from 'react';
+import _ from 'lodash';
 
 import './SearchForm.css';
 
 export default class SearchForm extends React.Component {
+  debouncedSendValue = _.debounce(this.sendValue, 500);
+
   constructor(props) {
     super(props);
     this.onValueChange = this.onValueChange.bind(this);
@@ -21,11 +24,7 @@ export default class SearchForm extends React.Component {
       };
     });
 
-    const { onInputSearch } = this.props;
-
-    if (value) {
-      onInputSearch(value);
-    }
+    this.debouncedSendValue(value);
   }
 
   onSubmitSearch(evt) {
@@ -36,6 +35,12 @@ export default class SearchForm extends React.Component {
         value: '',
       };
     });
+  }
+
+  sendValue(value) {
+    const { onInputSearch } = this.props;
+
+    if (value) onInputSearch(value);
   }
 
   render() {

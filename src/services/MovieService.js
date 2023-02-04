@@ -14,8 +14,8 @@ export default class MovieService {
     return {
       page,
       results: results.map(MovieService.transformResultsData),
-      totalPages,
-      totalResults,
+      totalPages: totalPages >= 500 ? 500 : totalPages,
+      totalResults: totalResults >= 10000 ? 10000 : totalResults,
     };
   }
 
@@ -29,7 +29,7 @@ export default class MovieService {
     };
   }
 
-  async getData(endpoint, query, page = 1) {
+  async getData(endpoint, query = '', page = 1) {
     const response = await fetch(
       `${this._apiBase}${endpoint}?query=${query}&page=${page}`,
       {
@@ -51,6 +51,11 @@ export default class MovieService {
 
   async getMovies(query, page) {
     const result = await this.getData('/search/movie', query, page);
+    return MovieService.transformMoviesData(result);
+  }
+
+  async getPopularMovies(page) {
+    const result = await this.getData('/movie/popular', '', page);
     return MovieService.transformMoviesData(result);
   }
 }

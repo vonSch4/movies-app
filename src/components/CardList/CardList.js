@@ -1,4 +1,4 @@
-import { Space, Pagination } from 'antd';
+import { Space, Pagination, Alert } from 'antd';
 
 import Card from '../Card';
 
@@ -13,6 +13,16 @@ export default function CardList(props) {
     return <Card key={el.id} data={el} />;
   });
 
+  if (cards.length === 0) {
+    return (
+      <Alert
+        message="Oops"
+        type="info"
+        description="No movie was found for the given word :("
+      />
+    );
+  }
+
   return (
     <Space direction="vertical" align="center" size={30}>
       <ul className="card-list">{cards}</ul>
@@ -23,6 +33,8 @@ export default function CardList(props) {
         current={page}
         total={totalResults}
         showSizeChanger={false}
+        showQuickJumper
+        hideOnSinglePage
         onChange={changePage}
       />
     </Space>
