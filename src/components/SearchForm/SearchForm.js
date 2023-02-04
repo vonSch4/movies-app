@@ -1,5 +1,4 @@
 import React from 'react';
-import _ from 'lodash';
 
 import './SearchForm.css';
 
@@ -22,11 +21,10 @@ export default class SearchForm extends React.Component {
       };
     });
 
-    const { onSearch } = this.props;
+    const { onInputSearch } = this.props;
 
     if (value) {
-      const deb = _.debounce(onSearch, 500);
-      deb(value);
+      onInputSearch(value);
     }
   }
 

@@ -3,23 +3,42 @@ export default class MovieService {
 
   _apiBase = `https://api.themoviedb.org/3`;
 
-  static transformMoviesData(movie) {
+  static transformMoviesData(data) {
+    const {
+      page,
+      results,
+      total_pages: totalPages,
+      total_results: totalResults,
+    } = data;
+
     return {
-      id: movie.id,
-      title: movie.title,
-      posterPath: movie.poster_path,
-      releaseDate: movie.release_date,
-      overview: movie.overview,
+      page,
+      results: results.map(MovieService.transformResultsData),
+      totalPages,
+      totalResults,
     };
   }
 
-  async getData(endpoint, query) {
-    const response = await fetch(`${this._apiBase}${endpoint}?query=${query}`, {
-      headers: {
-        Authorization: `Bearer ${this._apiKey}`,
-        'Content-type': 'application/json;charset=utf-8',
-      },
-    });
+  static transformResultsData(data) {
+    return {
+      id: data.id,
+      title: data.title,
+      posterPath: data.poster_path,
+      releaseDate: data.release_date,
+      overview: data.overview,
+    };
+  }
+
+  async getData(endpoint, query, page = 1) {
+    const response = await fetch(
+      `${this._apiBase}${endpoint}?query=${query}&page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this._apiKey}`,
+          'Content-type': 'application/json;charset=utf-8',
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Error: Request status ${response.status}`);
@@ -30,8 +49,8 @@ export default class MovieService {
     return data;
   }
 
-  async getMovies(query) {
-    const result = await this.getData('/search/movie', query);
-    return result.results.map(MovieService.transformMoviesData);
+  async getMovies(query, page) {
+    const result = await this.getData('/search/movie', query, page);
+    return MovieService.transformMoviesData(result);
   }
 }

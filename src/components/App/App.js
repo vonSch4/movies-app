@@ -13,29 +13,32 @@ import ErrorMessage from '../ErrorMessage';
 const err = {
   loadErr: {
     m: 'Content loading error',
-    d: 'An error occurred while downloading movies',
+    d: `An error occurred while downloading movies.
+    For users from Russia:  you need to enable VPN.`,
   },
   netErr: {
     m: 'Network error',
-    d: 'There is no Internet connection',
+    d: 'There is no Internet connection.',
   },
 };
 
 export default class App extends React.Component {
   movieService = new MovieService();
 
-  debouncedGetData = _.debounce(this.getData, 1000);
+  debouncedGetData = _.debounce(this.getData, 500);
 
   constructor(props) {
     super(props);
     this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
     this.onErrorLoading = this.onErrorLoading.bind(this);
-    this.onSearch = this.onSearch.bind(this);
+    this.onInputSearch = this.onInputSearch.bind(this);
+    this.changePage = this.changePage.bind(this);
     this.state = {
-      data: [],
+      data: {},
       isLoading: true,
       isError: false,
-      value: 'return',
+      value: 'green',
+      currentPage: 1,
     };
   }
 
@@ -46,20 +49,27 @@ export default class App extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { value } = this.state;
+    const { value, currentPage } = this.state;
 
     if (prevState.value !== value) {
-      this.debouncedGetData(value);
+      this.debouncedGetData(value, currentPage);
 
       this.setState(() => {
-        return { data: [], isLoading: true, isError: false };
+        return { isLoading: true, isError: false, currentPage: 1 };
+      });
+    }
+    if (prevState.currentPage !== currentPage) {
+      this.debouncedGetData(value, currentPage);
+
+      this.setState(() => {
+        return { isLoading: true, isError: false };
       });
     }
   }
 
-  onMoviesLoaded(movies) {
+  onMoviesLoaded(data) {
     this.setState(() => {
-      return { data: movies, isLoading: false, isError: false };
+      return { data, isLoading: false, isError: false };
     });
   }
 
@@ -69,7 +79,7 @@ export default class App extends React.Component {
     });
   }
 
-  onSearch(value) {
+  onInputSearch(value) {
     this.setState(() => {
       return {
         value,
@@ -77,10 +87,18 @@ export default class App extends React.Component {
     });
   }
 
-  getData(value) {
+  getData(value, page) {
     this.movieService
-      .getMovies(value)
+      .getMovies(value, page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
+  }
+
+  changePage(page) {
+    this.setState(() => {
+      return {
+        currentPage: page,
+      };
+    });
   }
 
   render() {
@@ -92,11 +110,13 @@ export default class App extends React.Component {
       <ErrorMessage mes={err.loadErr.m} desc={err.loadErr.d} />
     ) : null;
     const spinner = isLoading ? <Spinner /> : null;
-    const content = hasData ? <CardList data={data} /> : null;
+    const content = hasData ? (
+      <CardList data={data} changePage={this.changePage} />
+    ) : null;
 
     return (
       <>
-        <Header onSearch={this.onSearch} />
+        <Header onInputSearch={this.onInputSearch} />
         <Online>
           <main className="main">
             {errorMessage}

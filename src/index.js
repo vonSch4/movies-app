@@ -8,8 +8,4 @@ import 'antd/dist/reset.css';
 
 const root = ReactDOM.createRoot(document.querySelector('#root'));
 
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+root.render(<App />);
