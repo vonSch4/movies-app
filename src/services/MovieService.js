@@ -1,5 +1,7 @@
 export default class MovieService {
-  _apiKey = `eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1MDIzOGRhMjMxYjAxYTliYTkzNTZjOWM3YzNiMjU1YyIsInN1YiI6IjYzZDRkYzFlYzE1YjU1MDA3OWZhNTZiNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ._gKrfSk99HVRpMoJEoAURaAFZPiPF_88XHkN34jP34s`;
+  _apiKeyV4 = `eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1MDIzOGRhMjMxYjAxYTliYTkzNTZjOWM3YzNiMjU1YyIsInN1YiI6IjYzZDRkYzFlYzE1YjU1MDA3OWZhNTZiNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ._gKrfSk99HVRpMoJEoAURaAFZPiPF_88XHkN34jP34s`;
+
+  _apiKeyV3 = `50238da231b01a9ba9356c9c7c3b255c`;
 
   _apiBase = `https://api.themoviedb.org/3`;
 
@@ -29,10 +31,13 @@ export default class MovieService {
       ? `${data.vote_average}.0`
       : data.vote_average;
 
+    const selfRating = data.rating ? data.rating : null;
+
     return {
       id: data.id,
       title: data.title,
       rating,
+      selfRating,
       posterPath,
       releaseDate: data.release_date,
       overview: data.overview,
@@ -45,7 +50,7 @@ export default class MovieService {
       `${this._apiBase}/authentication/guest_session/new`,
       {
         headers: {
-          Authorization: `Bearer ${this._apiKey}`,
+          Authorization: `Bearer ${this._apiKeyV4}`,
         },
       }
     );
@@ -63,11 +68,10 @@ export default class MovieService {
 
   async putGuestRating(movieId, guestSessionId, rating) {
     const response = await fetch(
-      `${this._apiBase}/movie/${movieId}/rating?guest_session_id=${guestSessionId}`,
+      `${this._apiBase}/movie/${movieId}/rating?api_key=${this._apiKeyV3}&guest_session_id=${guestSessionId}`,
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${this._apiKey}`,
           'Content-type': 'application/json;charset=utf-8',
         },
         body: JSON.stringify({ value: +rating }),
@@ -79,12 +83,12 @@ export default class MovieService {
     }
   }
 
-  async getGuestRating(guestSessionID) {
+  async getGuestRating(guestSessionID, page = 1) {
     const response = await fetch(
-      `${this._apiBase}/guest_session/${guestSessionID}/rated/movies`,
+      `${this._apiBase}/guest_session/${guestSessionID}/rated/movies?api_key=${this._apiKeyV3}&page=${page}`,
       {
         headers: {
-          Authorization: `Bearer ${this._apiKey}`,
+          'Content-type': 'application/json;charset=utf-8',
         },
       }
     );
@@ -103,7 +107,7 @@ export default class MovieService {
       `${this._apiBase}${endpoint}?query=${query}&page=${page}`,
       {
         headers: {
-          Authorization: `Bearer ${this._apiKey}`,
+          Authorization: `Bearer ${this._apiKeyV4}`,
           'Content-type': 'application/json;charset=utf-8',
         },
       }

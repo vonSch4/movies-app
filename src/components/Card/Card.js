@@ -8,8 +8,8 @@ function reduceDescription(text) {
 }
 
 export default function Card({ data, genresList, putGuestRating }) {
-  const { id, title, posterPath, overview, rating, genreId } = data;
-  let { releaseDate } = data;
+  const { id, title, posterPath, overview, genreId } = data;
+  let { releaseDate, selfRating, rating } = data;
   let border;
 
   const backupImg =
@@ -31,6 +31,10 @@ export default function Card({ data, genresList, putGuestRating }) {
   const genresTags = genreId.map((el) => {
     return <Tag key={el}>{genresList[el]}</Tag>;
   });
+
+  rating = Math.trunc(rating * 100) / 100;
+
+  selfRating = selfRating || +localStorage.getItem(Number(id));
 
   return (
     <li className="card">
@@ -57,6 +61,7 @@ export default function Card({ data, genresList, putGuestRating }) {
           count={10}
           allowHalf
           style={{ display: 'flex', flexWrap: 'nowrap' }}
+          defaultValue={selfRating}
           onChange={(value) => putGuestRating(id, value)}
         />
       </div>

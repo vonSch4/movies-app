@@ -3,7 +3,7 @@ import { Tabs } from 'antd';
 import './TabsMenu.css';
 
 export default function TabsMenu(props) {
-  const { children, getGuestRating } = props;
+  const { children, getGuestRating, getPopularMovies } = props;
 
   return (
     <Tabs
@@ -14,8 +14,8 @@ export default function TabsMenu(props) {
       size="large"
       onChange={(key) => {
         if (key === 'rated') getGuestRating();
+        if (key === 'search') getPopularMovies(1);
       }}
-      destroyInactiveTabPane
     />
   );
 }

@@ -37,12 +37,14 @@ export default class App extends React.Component {
     this.onInputSearch = this.onInputSearch.bind(this);
     this.putGuestRating = this.putGuestRating.bind(this);
     this.getGuestRating = this.getGuestRating.bind(this);
+    this.getPopularMovies = this.getPopularMovies.bind(this);
     this.changePage = this.changePage.bind(this);
     this.state = {
       data: {},
       genresList: [],
       isLoading: true,
       isError: false,
+      ratedPage: false,
       value: null,
       currentPage: 1,
       guestSessionId: localStorage.getItem('guestSessionId'),
@@ -61,18 +63,22 @@ export default class App extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { value, currentPage } = this.state;
+    const { value, currentPage, ratedPage } = this.state;
 
-    if (!value && prevState.currentPage !== currentPage) {
+    if (!value && prevState.currentPage !== currentPage && !ratedPage) {
       this.getPopularMovies(currentPage);
     }
 
-    if (prevState.value !== value) {
+    if (prevState.value !== value && !ratedPage) {
       this.getFoundMovies(value, currentPage);
     }
 
-    if (value && prevState.currentPage !== currentPage) {
+    if (value && prevState.currentPage !== currentPage && !ratedPage) {
       this.getFoundMovies(value, currentPage);
+    }
+
+    if (ratedPage && prevState.currentPage !== currentPage) {
+      this.getGuestRating(currentPage);
     }
   }
 
@@ -99,7 +105,7 @@ export default class App extends React.Component {
 
   getFoundMovies(value, page) {
     this.setState(() => {
-      return { isLoading: true, isError: false };
+      return { isLoading: true, isError: false, ratedPage: false };
     });
     this.movieService
       .getMovies(value, page)
@@ -108,8 +114,9 @@ export default class App extends React.Component {
 
   getPopularMovies(page) {
     this.setState(() => {
-      return { isLoading: true, isError: false };
+      return { isLoading: true, isError: false, ratedPage: false };
     });
+
     this.movieService
       .getPopularMovies(page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
@@ -125,20 +132,27 @@ export default class App extends React.Component {
     });
   }
 
-  getGuestRating() {
+  getGuestRating(page = 1) {
     const { guestSessionId } = this.state;
 
     this.setState(() => {
-      return { isLoading: true, isError: false };
+      return {
+        isLoading: true,
+        isError: false,
+        ratedPage: true,
+        currentPage: page,
+      };
     });
 
     this.movieService
-      .getGuestRating(guestSessionId)
+      .getGuestRating(guestSessionId, page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 
   putGuestRating(movieId, value) {
     const { guestSessionId } = this.state;
+
+    localStorage.setItem(movieId, value);
 
     this.movieService.putGuestRating(movieId, guestSessionId, value);
   }
@@ -186,7 +200,10 @@ export default class App extends React.Component {
 
     return (
       <MovieServiceProvider value={genresList}>
-        <TabsMenu getGuestRating={this.getGuestRating}>
+        <TabsMenu
+          getGuestRating={this.getGuestRating}
+          getPopularMovies={this.getPopularMovies}
+        >
           <Header onInputSearch={this.onInputSearch} />
           <Online>
             <main className="main">
