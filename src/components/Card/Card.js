@@ -32,9 +32,9 @@ export default function Card({ data, genresList, putGuestRating }) {
     return <Tag key={el}>{genresList[el]}</Tag>;
   });
 
-  rating = Math.trunc(rating * 100) / 100;
+  rating = Math.round(rating * 10) / 10;
 
-  selfRating = selfRating || +localStorage.getItem(Number(id));
+  selfRating = selfRating || Math.round(localStorage.getItem(Number(id)));
 
   return (
     <li className="card">
