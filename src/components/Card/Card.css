@@ -24,15 +24,35 @@
 
 .movie-info {
   grid-area: b;
+  display: flex;
+  flex-direction: column;
   font-family: 'Montserrat', sans-serif;
-  margin: 25px;
+  margin: 15px;
   margin-top: 10px;
 }
 
 .title {
-  font-size: 22px;
-  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
+}
+
+.title-text {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.title-rating {
+  user-select: none;
+  margin-left: 15px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .date {
@@ -42,5 +62,16 @@
 }
 
 .tags {
+  user-select: none;
   margin-bottom: 10px;
+}
+
+.ant-tag {
+  margin-bottom: 8px;
+}
+
+.rate {
+  align-self: center;
+  margin-top: auto;
+  margin-bottom: 15px;
 }

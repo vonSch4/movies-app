@@ -1,16 +1,29 @@
 import { Space, Pagination, Alert } from 'antd';
 
+import { MovieServiceConsumer } from '../MovieServiceContext';
 import Card from '../Card';
 
 import './CardList.css';
 
 export default function CardList(props) {
-  const { data, changePage } = props;
+  const { data, changePage, page, putGuestRating } = props;
 
-  const { page, results, totalResults } = data;
+  const { results, totalResults } = data;
 
   const cards = results.map((el) => {
-    return <Card key={el.id} data={el} />;
+    return (
+      <MovieServiceConsumer key={el.id}>
+        {(genresList) => {
+          return (
+            <Card
+              data={el}
+              genresList={genresList}
+              putGuestRating={putGuestRating}
+            />
+          );
+        }}
+      </MovieServiceConsumer>
+    );
   });
 
   if (cards.length === 0) {

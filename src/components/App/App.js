@@ -4,6 +4,8 @@ import { Offline, Online } from 'react-detect-offline';
 import './App.css';
 
 import MovieService from '../../services';
+import { MovieServiceProvider } from '../MovieServiceContext';
+import TabsMenu from '../TabsMenu';
 import Header from '../Header';
 import CardList from '../CardList';
 import Spinner from '../Spinner';
@@ -22,6 +24,10 @@ const err = {
 };
 
 export default class App extends React.Component {
+  static saveToLocalStorage(key, value) {
+    localStorage.setItem(key, value);
+  }
+
   movieService = new MovieService();
 
   constructor(props) {
@@ -29,13 +35,17 @@ export default class App extends React.Component {
     this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
     this.onErrorLoading = this.onErrorLoading.bind(this);
     this.onInputSearch = this.onInputSearch.bind(this);
+    this.putGuestRating = this.putGuestRating.bind(this);
+    this.getGuestRating = this.getGuestRating.bind(this);
     this.changePage = this.changePage.bind(this);
     this.state = {
       data: {},
+      genresList: [],
       isLoading: true,
       isError: false,
       value: null,
       currentPage: 1,
+      guestSessionId: localStorage.getItem('guestSessionId'),
     };
   }
 
@@ -43,6 +53,11 @@ export default class App extends React.Component {
     const { currentPage } = this.state;
 
     this.getPopularMovies(currentPage);
+    this.getGenresMovies();
+
+    const guestSessionId = localStorage.getItem('guestSessionId');
+
+    if (!guestSessionId) this.createGuestSession();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -50,26 +65,14 @@ export default class App extends React.Component {
 
     if (!value && prevState.currentPage !== currentPage) {
       this.getPopularMovies(currentPage);
-
-      this.setState(() => {
-        return { isLoading: true, isError: false };
-      });
     }
 
     if (prevState.value !== value) {
       this.getFoundMovies(value, currentPage);
-
-      this.setState(() => {
-        return { isLoading: true, isError: false, currentPage: 1 };
-      });
     }
 
     if (value && prevState.currentPage !== currentPage) {
       this.getFoundMovies(value, currentPage);
-
-      this.setState(() => {
-        return { isLoading: true, isError: false };
-      });
     }
   }
 
@@ -89,20 +92,68 @@ export default class App extends React.Component {
     this.setState(() => {
       return {
         value,
+        currentPage: 1,
       };
     });
   }
 
   getFoundMovies(value, page) {
+    this.setState(() => {
+      return { isLoading: true, isError: false };
+    });
     this.movieService
       .getMovies(value, page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 
   getPopularMovies(page) {
+    this.setState(() => {
+      return { isLoading: true, isError: false };
+    });
     this.movieService
       .getPopularMovies(page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
+  }
+
+  getGenresMovies() {
+    this.movieService.getGenresMovies().then((res) => {
+      this.setState(() => {
+        return {
+          genresList: res,
+        };
+      });
+    });
+  }
+
+  getGuestRating() {
+    const { guestSessionId } = this.state;
+
+    this.setState(() => {
+      return { isLoading: true, isError: false };
+    });
+
+    this.movieService
+      .getGuestRating(guestSessionId)
+      .then(this.onMoviesLoaded, this.onErrorLoading);
+  }
+
+  putGuestRating(movieId, value) {
+    const { guestSessionId } = this.state;
+
+    this.movieService.putGuestRating(movieId, guestSessionId, value);
+  }
+
+  createGuestSession() {
+    this.movieService
+      .createGuestSession()
+      .then(({ guest_session_id: guestSessionId }) => {
+        this.setState(() => {
+          return {
+            guestSessionId,
+          };
+        });
+        App.saveToLocalStorage('guestSessionId', guestSessionId);
+      });
   }
 
   changePage(page) {
@@ -114,34 +165,41 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { data, isLoading, isError } = this.state;
+    const { data, isLoading, isError, currentPage, genresList } = this.state;
+
+    const LoadError = <ErrorMessage mes={err.loadErr.m} desc={err.loadErr.d} />;
+    const NetError = <ErrorMessage mes={err.netErr.m} desc={err.netErr.d} />;
+    const CardListContent = (
+      <CardList
+        data={data}
+        changePage={this.changePage}
+        page={currentPage}
+        putGuestRating={this.putGuestRating}
+      />
+    );
 
     const hasData = !(isLoading || isError);
 
-    const errorMessage = isError ? (
-      <ErrorMessage mes={err.loadErr.m} desc={err.loadErr.d} />
-    ) : null;
-    const spinner = isLoading ? <Spinner /> : null;
-    const content = hasData ? (
-      <CardList data={data} changePage={this.changePage} />
-    ) : null;
+    const loadingError = isError ? LoadError : null;
+    const loadingSpinner = isLoading ? <Spinner /> : null;
+    const cardListContent = hasData ? CardListContent : null;
 
     return (
-      <>
-        <Header onInputSearch={this.onInputSearch} />
-        <Online>
-          <main className="main">
-            {errorMessage}
-            {spinner}
-            {content}
-          </main>
-        </Online>
+      <MovieServiceProvider value={genresList}>
+        <TabsMenu getGuestRating={this.getGuestRating}>
+          <Header onInputSearch={this.onInputSearch} />
+          <Online>
+            <main className="main">
+              {loadingError}
+              {loadingSpinner}
+              {cardListContent}
+            </main>
+          </Online>
+        </TabsMenu>
         <Offline>
-          <main className="main">
-            <ErrorMessage mes={err.netErr.m} desc={err.netErr.d} />
-          </main>
+          <main className="main">{NetError}</main>
         </Offline>
-      </>
+      </MovieServiceProvider>
     );
   }
 }

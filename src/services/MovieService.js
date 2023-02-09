@@ -20,13 +20,82 @@ export default class MovieService {
   }
 
   static transformResultsData(data) {
+    const posterPath =
+      data.poster_path !== null
+        ? `https://image.tmdb.org/t/p/original${data.poster_path}`
+        : '';
+
+    const rating = Number.isInteger(data.vote_average)
+      ? `${data.vote_average}.0`
+      : data.vote_average;
+
     return {
       id: data.id,
       title: data.title,
-      posterPath: data.poster_path,
+      rating,
+      posterPath,
       releaseDate: data.release_date,
       overview: data.overview,
+      genreId: data.genre_ids,
     };
+  }
+
+  async createGuestSession() {
+    const response = await fetch(
+      `${this._apiBase}/authentication/guest_session/new`,
+      {
+        headers: {
+          Authorization: `Bearer ${this._apiKey}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error: Request status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return data.success
+      ? data
+      : new Error(`Error: failed create guest session}`);
+  }
+
+  async putGuestRating(movieId, guestSessionId, rating) {
+    const response = await fetch(
+      `${this._apiBase}/movie/${movieId}/rating?guest_session_id=${guestSessionId}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this._apiKey}`,
+          'Content-type': 'application/json;charset=utf-8',
+        },
+        body: JSON.stringify({ value: +rating }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error: Request status ${response.status}`);
+    }
+  }
+
+  async getGuestRating(guestSessionID) {
+    const response = await fetch(
+      `${this._apiBase}/guest_session/${guestSessionID}/rated/movies`,
+      {
+        headers: {
+          Authorization: `Bearer ${this._apiKey}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error: Request status ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    return MovieService.transformMoviesData(result);
   }
 
   async getData(endpoint, query = '', page = 1) {
@@ -57,5 +126,14 @@ export default class MovieService {
   async getPopularMovies(page) {
     const result = await this.getData('/movie/popular', '', page);
     return MovieService.transformMoviesData(result);
+  }
+
+  async getGenresMovies() {
+    const result = await this.getData('/genre/movie/list');
+
+    return result.genres.reduce((obj, item) => {
+      obj[item.id] = item.name;
+      return obj;
+    }, {});
   }
 }

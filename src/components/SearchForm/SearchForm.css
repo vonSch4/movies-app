@@ -3,8 +3,8 @@ form {
 }
 
 .search-field {
+  font: 28px 'Montserrat', sans-serif;
   background-color: inherit;
-  font-size: 28px;
   width: 75%;
   height: 60px;
   padding: 0 20px;
