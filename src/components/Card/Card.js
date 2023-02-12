@@ -4,12 +4,12 @@ import { Image, Rate, Tag } from 'antd';
 import './Card.css';
 
 function reduceDescription(text) {
-  return text.replace(/^(.{160}[^\W]*).*/gm, '$1...');
+  return text.replace(/^(.{140}[^\W]*).*/gm, '$1...');
 }
 
-export default function Card({ data, genresList, putGuestRating }) {
-  const { id, title, posterPath, overview, genreId } = data;
-  let { releaseDate, selfRating, rating } = data;
+export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
+  const { id, title, posterPath, overview, genreId, rating } = data;
+  let { releaseDate, userRating } = data;
   let border;
 
   const backupImg =
@@ -19,6 +19,12 @@ export default function Card({ data, genresList, putGuestRating }) {
     releaseDate = format(new Date(releaseDate), 'PP');
   } catch {
     releaseDate = 'The date is missing';
+  }
+
+  try {
+    userRating = userRating || ratedFilms[id];
+  } catch {
+    userRating = 0;
   }
 
   const reducedOverview = reduceDescription(overview);
@@ -31,10 +37,6 @@ export default function Card({ data, genresList, putGuestRating }) {
   const genresTags = genreId.map((el) => {
     return <Tag key={el}>{genresList[el]}</Tag>;
   });
-
-  rating = Math.round(rating * 10) / 10;
-
-  selfRating = selfRating || Math.round(localStorage.getItem(Number(id)));
 
   return (
     <li className="card">
@@ -61,7 +63,7 @@ export default function Card({ data, genresList, putGuestRating }) {
           count={10}
           allowHalf
           style={{ display: 'flex', flexWrap: 'nowrap' }}
-          defaultValue={selfRating}
+          defaultValue={userRating}
           onChange={(value) => putGuestRating(id, value)}
         />
       </div>

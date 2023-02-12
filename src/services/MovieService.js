@@ -22,22 +22,21 @@ export default class MovieService {
   }
 
   static transformResultsData(data) {
-    const posterPath =
-      data.poster_path !== null
-        ? `https://image.tmdb.org/t/p/original${data.poster_path}`
-        : '';
+    const posterPath = data.poster_path
+      ? `https://image.tmdb.org/t/p/original${data.poster_path}`
+      : '';
 
     const rating = Number.isInteger(data.vote_average)
       ? `${data.vote_average}.0`
-      : data.vote_average;
+      : Math.round(data.vote_average * 10) / 10;
 
-    const selfRating = data.rating ? data.rating : null;
+    const userRating = data.rating ? data.rating : null;
 
     return {
       id: data.id,
       title: data.title,
       rating,
-      selfRating,
+      userRating,
       posterPath,
       releaseDate: data.release_date,
       overview: data.overview,
@@ -83,7 +82,7 @@ export default class MovieService {
     }
   }
 
-  async getGuestRating(guestSessionID, page = 1) {
+  async getRatedMovies(guestSessionID, page = 1) {
     const response = await fetch(
       `${this._apiBase}/guest_session/${guestSessionID}/rated/movies?api_key=${this._apiKeyV3}&page=${page}`,
       {
@@ -122,7 +121,7 @@ export default class MovieService {
     return data;
   }
 
-  async getMovies(query, page) {
+  async getFoundMovies(query, page) {
     const result = await this.getData('/search/movie', query, page);
     return MovieService.transformMoviesData(result);
   }

@@ -3,7 +3,7 @@
   margin: 0 auto;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(525px, 1fr));
   gap: 30px;
   justify-items: center;
 }
@@ -22,4 +22,16 @@
 
 .ant-pagination {
   text-align: center;
+}
+
+@media (max-width: 1440px) {
+  .card-list {
+    width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-list {
+    width: 95%;
+  }
 }

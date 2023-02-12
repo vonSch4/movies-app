@@ -1,5 +1,5 @@
 import React from 'react';
-import { Offline, Online } from 'react-detect-offline';
+import { Offline } from 'react-detect-offline';
 
 import './App.css';
 
@@ -33,58 +33,70 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
+    this.onRatedMoviesLoaded = this.onRatedMoviesLoaded.bind(this);
     this.onErrorLoading = this.onErrorLoading.bind(this);
     this.onInputSearch = this.onInputSearch.bind(this);
     this.putGuestRating = this.putGuestRating.bind(this);
-    this.getGuestRating = this.getGuestRating.bind(this);
+    this.getRatedMovies = this.getRatedMovies.bind(this);
     this.getPopularMovies = this.getPopularMovies.bind(this);
     this.changePage = this.changePage.bind(this);
+    this.changeTab = this.changeTab.bind(this);
     this.state = {
       data: {},
+      dataRated: {},
+      ratedFilms: {},
       genresList: [],
       isLoading: true,
       isError: false,
-      ratedPage: false,
+      onRatedPage: false,
       value: null,
       currentPage: 1,
+      currentPageRated: 1,
       guestSessionId: localStorage.getItem('guestSessionId'),
     };
   }
 
   componentDidMount() {
-    const { currentPage } = this.state;
+    const { currentPage, currentPageRated, guestSessionId } = this.state;
 
     this.getPopularMovies(currentPage);
+    this.getRatedMovies(currentPageRated);
     this.getGenresMovies();
-
-    const guestSessionId = localStorage.getItem('guestSessionId');
 
     if (!guestSessionId) this.createGuestSession();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { value, currentPage, ratedPage } = this.state;
+    const { value, currentPage, currentPageRated, onRatedPage } = this.state;
 
-    if (!value && prevState.currentPage !== currentPage && !ratedPage) {
-      this.getPopularMovies(currentPage);
+    if (!onRatedPage) {
+      if (!value && prevState.currentPage !== currentPage) {
+        this.getPopularMovies(currentPage);
+      }
+
+      if (prevState.value !== value) {
+        this.getFoundMovies(value, currentPage);
+      }
+
+      if (value && prevState.currentPage !== currentPage) {
+        this.getFoundMovies(value, currentPage);
+      }
     }
 
-    if (prevState.value !== value && !ratedPage) {
-      this.getFoundMovies(value, currentPage);
-    }
-
-    if (value && prevState.currentPage !== currentPage && !ratedPage) {
-      this.getFoundMovies(value, currentPage);
-    }
-
-    if (ratedPage && prevState.currentPage !== currentPage) {
-      this.getGuestRating(currentPage);
+    if (onRatedPage && prevState.currentPageRated !== currentPageRated) {
+      this.getRatedMovies(currentPageRated);
     }
   }
 
   onMoviesLoaded(data) {
     this.setState(() => {
       return { data, isLoading: false, isError: false };
+    });
+  }
+
+  onRatedMoviesLoaded(dataRated) {
+    this.setState(() => {
+      return { dataRated, isLoading: false, isError: false };
     });
   }
 
@@ -105,16 +117,23 @@ export default class App extends React.Component {
 
   getFoundMovies(value, page) {
     this.setState(() => {
-      return { isLoading: true, isError: false, ratedPage: false };
+      return {
+        isLoading: true,
+        isError: false,
+      };
     });
+
     this.movieService
-      .getMovies(value, page)
+      .getFoundMovies(value, page)
       .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 
   getPopularMovies(page) {
     this.setState(() => {
-      return { isLoading: true, isError: false, ratedPage: false };
+      return {
+        isLoading: true,
+        isError: false,
+      };
     });
 
     this.movieService
@@ -122,37 +141,51 @@ export default class App extends React.Component {
       .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 
-  getGenresMovies() {
-    this.movieService.getGenresMovies().then((res) => {
-      this.setState(() => {
-        return {
-          genresList: res,
-        };
-      });
-    });
-  }
-
-  getGuestRating(page = 1) {
+  getRatedMovies(page) {
     const { guestSessionId } = this.state;
 
     this.setState(() => {
       return {
         isLoading: true,
         isError: false,
-        ratedPage: true,
-        currentPage: page,
+        currentPageRated: page,
       };
     });
 
     this.movieService
-      .getGuestRating(guestSessionId, page)
-      .then(this.onMoviesLoaded, this.onErrorLoading);
+      .getRatedMovies(guestSessionId, page)
+      .then(this.onRatedMoviesLoaded, this.onErrorLoading);
+  }
+
+  getGenresMovies() {
+    this.movieService.getGenresMovies().then((genres) => {
+      this.setState(() => {
+        return {
+          genresList: genres,
+        };
+      });
+    });
   }
 
   putGuestRating(movieId, value) {
-    const { guestSessionId } = this.state;
+    const { guestSessionId, currentPageRated } = this.state;
 
-    localStorage.setItem(movieId, value);
+    this.setState(({ ratedFilms }) => {
+      const newRatedFilms = { ...ratedFilms, [movieId]: value };
+
+      return {
+        ratedFilms: newRatedFilms,
+      };
+    });
+
+    // const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || {};
+    // ratedMovies[movieId] = value;
+
+    // App.saveToLocalStorage('ratedMovies', JSON.stringify(ratedMovies));
+
+    this.movieService
+      .getRatedMovies(guestSessionId, currentPageRated)
+      .then(this.onRatedMoviesLoaded, this.onErrorLoading);
 
     this.movieService.putGuestRating(movieId, guestSessionId, value);
   }
@@ -166,52 +199,93 @@ export default class App extends React.Component {
             guestSessionId,
           };
         });
+
         App.saveToLocalStorage('guestSessionId', guestSessionId);
       });
   }
 
   changePage(page) {
-    this.setState(() => {
+    this.setState((prevState) => {
+      if (prevState.onRatedPage) {
+        return {
+          currentPageRated: page,
+        };
+      }
+
       return {
         currentPage: page,
       };
     });
   }
 
+  changeTab(key) {
+    if (key === 'search') {
+      this.setState(() => {
+        return {
+          onRatedPage: false,
+        };
+      });
+    }
+
+    if (key === 'rated') {
+      this.setState(() => {
+        return {
+          onRatedPage: true,
+        };
+      });
+    }
+  }
+
   render() {
-    const { data, isLoading, isError, currentPage, genresList } = this.state;
+    const {
+      data,
+      dataRated,
+      ratedFilms,
+      isLoading,
+      isError,
+      currentPage,
+      currentPageRated,
+      genresList,
+    } = this.state;
 
     const LoadError = <ErrorMessage mes={err.loadErr.m} desc={err.loadErr.d} />;
     const NetError = <ErrorMessage mes={err.netErr.m} desc={err.netErr.d} />;
-    const CardListContent = (
+    const CardListSearch = (
       <CardList
         data={data}
+        ratedFilms={ratedFilms}
         changePage={this.changePage}
         page={currentPage}
+        putGuestRating={this.putGuestRating}
+      />
+    );
+    const CardListRated = (
+      <CardList
+        data={dataRated}
+        ratedFilms={ratedFilms}
+        changePage={this.changePage}
+        page={currentPageRated}
         putGuestRating={this.putGuestRating}
       />
     );
 
     const hasData = !(isLoading || isError);
 
-    const loadingError = isError ? LoadError : null;
-    const loadingSpinner = isLoading ? <Spinner /> : null;
-    const cardListContent = hasData ? CardListContent : null;
+    const loadingError = isError && LoadError;
+    const loadingSpinner = isLoading && <Spinner />;
+    const cardListSearch = hasData && CardListSearch;
+    const cardListRated = hasData && CardListRated;
 
     return (
       <MovieServiceProvider value={genresList}>
         <TabsMenu
-          getGuestRating={this.getGuestRating}
-          getPopularMovies={this.getPopularMovies}
+          changeTab={this.changeTab}
+          loadingError={loadingError}
+          loadingSpinner={loadingSpinner}
+          cardListSearch={cardListSearch}
+          cardListRated={cardListRated}
         >
           <Header onInputSearch={this.onInputSearch} />
-          <Online>
-            <main className="main">
-              {loadingError}
-              {loadingSpinner}
-              {cardListContent}
-            </main>
-          </Online>
         </TabsMenu>
         <Offline>
           <main className="main">{NetError}</main>

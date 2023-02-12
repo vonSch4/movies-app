@@ -73,5 +73,37 @@
 .rate {
   align-self: center;
   margin-top: auto;
-  margin-bottom: 15px;
+}
+
+@media (max-width: 1440px) {
+  .title-text {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .title-rating {
+    margin-left: 0;
+  }
+
+  .card {
+    grid-template-columns: repeat(2, 107.5px);
+  }
+
+  .ant-image {
+    max-width: 215px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    grid-template-columns: repeat(2, 100px);
+  }
+
+  .ant-image {
+    max-width: 200px;
+  }
+
+  .movie-info {
+    font-size: 12px;
+  }
 }
