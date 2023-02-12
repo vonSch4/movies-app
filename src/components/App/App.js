@@ -58,10 +58,10 @@ export default class App extends React.Component {
   componentDidMount() {
     const { currentPage, guestSessionId } = this.state;
 
+    if (!guestSessionId) this.createGuestSession();
+
     this.getPopularMovies(currentPage);
     this.getGenresMovies();
-
-    if (!guestSessionId) this.createGuestSession();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -182,14 +182,6 @@ export default class App extends React.Component {
 
   putGuestRating(movieId, value) {
     const { guestSessionId } = this.state;
-
-    this.setState(({ ratedFilms }) => {
-      const newRatedFilms = { ...ratedFilms, [movieId]: value };
-
-      return {
-        ratedFilms: newRatedFilms,
-      };
-    });
 
     const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || {};
     ratedMovies[movieId] = value;

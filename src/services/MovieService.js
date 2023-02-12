@@ -30,8 +30,14 @@ export default class MovieService {
       ? `${data.vote_average}.0`
       : Math.round(data.vote_average * 10) / 10;
 
-    const userRating =
-      data.rating || JSON.parse(localStorage.getItem('ratedMovies'))[data.id];
+    let userRating;
+
+    try {
+      userRating =
+        data.rating || JSON.parse(localStorage.getItem('ratedMovies'))[data.id];
+    } catch {
+      userRating = 0;
+    }
 
     return {
       id: data.id,
