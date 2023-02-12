@@ -7,7 +7,7 @@ function reduceDescription(text) {
   return text.replace(/^(.{140}[^\W]*).*/gm, '$1...');
 }
 
-export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
+export default function Card({ data, genresList, putGuestRating }) {
   const { id, title, posterPath, overview, genreId, rating } = data;
   let { releaseDate, userRating } = data;
   let border;
@@ -22,7 +22,9 @@ export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
   }
 
   try {
-    userRating = userRating || ratedFilms[id];
+    userRating =
+      userRating ||
+      Math.round(JSON.parse(localStorage.getItem('ratedMovies'))[id]);
   } catch {
     userRating = 0;
   }
