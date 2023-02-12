@@ -7,9 +7,10 @@ function reduceDescription(text) {
   return text.replace(/^(.{140}[^\W]*).*/gm, '$1...');
 }
 
-export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
-  const { id, title, posterPath, overview, genreId, rating } = data;
-  let { releaseDate, userRating } = data;
+export default function Card({ data, genresList, putGuestRating }) {
+  const { id, title, posterPath, overview, genreId, avgRating, userRating } =
+    data;
+  let { releaseDate } = data;
   let border;
 
   const backupImg =
@@ -21,18 +22,12 @@ export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
     releaseDate = 'The date is missing';
   }
 
-  try {
-    userRating = userRating || ratedFilms[id];
-  } catch {
-    userRating = 0;
-  }
-
   const reducedOverview = reduceDescription(overview);
 
-  if (rating <= 3) border = '3px solid #E90000';
-  if (rating > 3 && rating <= 5) border = '3px solid #E97E00';
-  if (rating > 5 && rating <= 7) border = '3px solid #E9D100';
-  if (rating > 7) border = '3px solid #66E900';
+  if (avgRating <= 3) border = '3px solid #E90000';
+  if (avgRating > 3 && avgRating <= 5) border = '3px solid #E97E00';
+  if (avgRating > 5 && avgRating <= 7) border = '3px solid #E9D100';
+  if (avgRating > 7) border = '3px solid #66E900';
 
   const genresTags = genreId.map((el) => {
     return <Tag key={el}>{genresList[el]}</Tag>;
@@ -52,7 +47,7 @@ export default function Card({ data, ratedFilms, genresList, putGuestRating }) {
         <div className="title">
           <h2 className="title-text">{title}</h2>
           <span className="title-rating" style={{ border }}>
-            {rating}
+            {avgRating}
           </span>
         </div>
         <span className="date">{releaseDate}</span>

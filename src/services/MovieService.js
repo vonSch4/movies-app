@@ -26,16 +26,17 @@ export default class MovieService {
       ? `https://image.tmdb.org/t/p/original${data.poster_path}`
       : '';
 
-    const rating = Number.isInteger(data.vote_average)
+    const avgRating = Number.isInteger(data.vote_average)
       ? `${data.vote_average}.0`
       : Math.round(data.vote_average * 10) / 10;
 
-    const userRating = data.rating ? data.rating : null;
+    const userRating =
+      data.rating || JSON.parse(localStorage.getItem('ratedMovies'))[data.id];
 
     return {
       id: data.id,
       title: data.title,
-      rating,
+      avgRating,
       userRating,
       posterPath,
       releaseDate: data.release_date,

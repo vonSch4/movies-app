@@ -45,12 +45,5 @@ export default function TabsMenu(props) {
     },
   ];
 
-  return (
-    <Tabs
-      items={tabsItems}
-      size="large"
-      onChange={changeTab}
-      destroyInactiveTabPane
-    />
-  );
+  return <Tabs items={tabsItems} size="large" onChange={changeTab} />;
 }

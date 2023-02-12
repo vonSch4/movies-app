@@ -6,7 +6,7 @@ import Card from '../Card';
 import './CardList.css';
 
 export default function CardList(props) {
-  const { data, ratedFilms, changePage, page, putGuestRating } = props;
+  const { data, changePage, page, putGuestRating } = props;
 
   const { results, totalResults } = data;
 
@@ -17,7 +17,6 @@ export default function CardList(props) {
           return (
             <Card
               data={el}
-              ratedFilms={ratedFilms}
               genresList={genresList}
               putGuestRating={putGuestRating}
             />

@@ -10,8 +10,9 @@ export default class SearchForm extends React.Component {
     super(props);
     this.onValueChange = this.onValueChange.bind(this);
     this.onSubmitSearch = this.onSubmitSearch.bind(this);
+    const { value } = this.props;
     this.state = {
-      value: '',
+      value,
     };
   }
 
@@ -35,12 +36,14 @@ export default class SearchForm extends React.Component {
         value: '',
       };
     });
+
+    this.debouncedSendValue('');
   }
 
   sendValue(value) {
     const { onInputSearch } = this.props;
 
-    if (value) onInputSearch(value);
+    onInputSearch(value);
   }
 
   render() {

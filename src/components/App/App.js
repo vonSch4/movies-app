@@ -44,12 +44,11 @@ export default class App extends React.Component {
     this.state = {
       data: {},
       dataRated: {},
-      ratedFilms: {},
       genresList: [],
       isLoading: true,
       isError: false,
       onRatedPage: false,
-      value: null,
+      value: '',
       currentPage: 1,
       currentPageRated: 1,
       guestSessionId: localStorage.getItem('guestSessionId'),
@@ -57,10 +56,9 @@ export default class App extends React.Component {
   }
 
   componentDidMount() {
-    const { currentPage, currentPageRated, guestSessionId } = this.state;
+    const { currentPage, guestSessionId } = this.state;
 
     this.getPopularMovies(currentPage);
-    this.getRatedMovies(currentPageRated);
     this.getGenresMovies();
 
     if (!guestSessionId) this.createGuestSession();
@@ -70,21 +68,36 @@ export default class App extends React.Component {
     const { value, currentPage, currentPageRated, onRatedPage } = this.state;
 
     if (!onRatedPage) {
-      if (!value && prevState.currentPage !== currentPage) {
+      if (value && value !== prevState.value) {
+        this.getFoundMovies(value, currentPage);
+        return;
+      }
+
+      if (value && currentPage !== prevState.currentPage) {
+        this.getFoundMovies(value, currentPage);
+        return;
+      }
+
+      if (!value && value !== prevState.value) {
         this.getPopularMovies(currentPage);
+        return;
       }
 
-      if (prevState.value !== value) {
-        this.getFoundMovies(value, currentPage);
+      if (!value && currentPage !== prevState.currentPage) {
+        this.getPopularMovies(currentPage);
+        return;
       }
 
-      if (value && prevState.currentPage !== currentPage) {
-        this.getFoundMovies(value, currentPage);
+      if (onRatedPage !== prevState.onRatedPage) {
+        if (value) this.getFoundMovies(value, currentPage);
+        if (!value) this.getPopularMovies(currentPage);
       }
     }
 
-    if (onRatedPage && prevState.currentPageRated !== currentPageRated) {
-      this.getRatedMovies(currentPageRated);
+    if (onRatedPage) {
+      if (currentPageRated !== prevState.currentPageRated) {
+        this.getRatedMovies(currentPageRated);
+      }
     }
   }
 
@@ -168,7 +181,7 @@ export default class App extends React.Component {
   }
 
   putGuestRating(movieId, value) {
-    const { guestSessionId, currentPageRated } = this.state;
+    const { guestSessionId } = this.state;
 
     this.setState(({ ratedFilms }) => {
       const newRatedFilms = { ...ratedFilms, [movieId]: value };
@@ -178,14 +191,10 @@ export default class App extends React.Component {
       };
     });
 
-    // const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || {};
-    // ratedMovies[movieId] = value;
+    const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || {};
+    ratedMovies[movieId] = value;
 
-    // App.saveToLocalStorage('ratedMovies', JSON.stringify(ratedMovies));
-
-    this.movieService
-      .getRatedMovies(guestSessionId, currentPageRated)
-      .then(this.onRatedMoviesLoaded, this.onErrorLoading);
+    App.saveToLocalStorage('ratedMovies', JSON.stringify(ratedMovies));
 
     this.movieService.putGuestRating(movieId, guestSessionId, value);
   }
@@ -219,6 +228,8 @@ export default class App extends React.Component {
   }
 
   changeTab(key) {
+    const { currentPageRated } = this.state;
+
     if (key === 'search') {
       this.setState(() => {
         return {
@@ -233,6 +244,8 @@ export default class App extends React.Component {
           onRatedPage: true,
         };
       });
+
+      this.getRatedMovies(currentPageRated);
     }
   }
 
@@ -240,7 +253,7 @@ export default class App extends React.Component {
     const {
       data,
       dataRated,
-      ratedFilms,
+      value,
       isLoading,
       isError,
       currentPage,
@@ -253,7 +266,6 @@ export default class App extends React.Component {
     const CardListSearch = (
       <CardList
         data={data}
-        ratedFilms={ratedFilms}
         changePage={this.changePage}
         page={currentPage}
         putGuestRating={this.putGuestRating}
@@ -262,7 +274,6 @@ export default class App extends React.Component {
     const CardListRated = (
       <CardList
         data={dataRated}
-        ratedFilms={ratedFilms}
         changePage={this.changePage}
         page={currentPageRated}
         putGuestRating={this.putGuestRating}
@@ -285,7 +296,7 @@ export default class App extends React.Component {
           cardListSearch={cardListSearch}
           cardListRated={cardListRated}
         >
-          <Header onInputSearch={this.onInputSearch} />
+          <Header onInputSearch={this.onInputSearch} value={value} />
         </TabsMenu>
         <Offline>
           <main className="main">{NetError}</main>
