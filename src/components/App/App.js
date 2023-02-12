@@ -15,7 +15,7 @@ const err = {
   loadErr: {
     m: 'Content loading error',
     d: `An error occurred while downloading movies.
-    For users from Russia:  you need to enable VPN.`,
+    For users from Russia: you need to enable VPN.`,
   },
   netErr: {
     m: 'Network error',
@@ -33,7 +33,6 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
-    this.onRatedMoviesLoaded = this.onRatedMoviesLoaded.bind(this);
     this.onErrorLoading = this.onErrorLoading.bind(this);
     this.onInputSearch = this.onInputSearch.bind(this);
     this.putGuestRating = this.putGuestRating.bind(this);
@@ -43,7 +42,6 @@ export default class App extends React.Component {
     this.changeTab = this.changeTab.bind(this);
     this.state = {
       data: {},
-      dataRated: {},
       genresList: [],
       isLoading: true,
       isError: false,
@@ -95,6 +93,10 @@ export default class App extends React.Component {
     }
 
     if (onRatedPage) {
+      if (onRatedPage !== prevState.onRatedPage) {
+        this.getRatedMovies(currentPageRated);
+      }
+
       if (currentPageRated !== prevState.currentPageRated) {
         this.getRatedMovies(currentPageRated);
       }
@@ -104,12 +106,6 @@ export default class App extends React.Component {
   onMoviesLoaded(data) {
     this.setState(() => {
       return { data, isLoading: false, isError: false };
-    });
-  }
-
-  onRatedMoviesLoaded(dataRated) {
-    this.setState(() => {
-      return { dataRated, isLoading: false, isError: false };
     });
   }
 
@@ -167,7 +163,7 @@ export default class App extends React.Component {
 
     this.movieService
       .getRatedMovies(guestSessionId, page)
-      .then(this.onRatedMoviesLoaded, this.onErrorLoading);
+      .then(this.onMoviesLoaded, this.onErrorLoading);
   }
 
   getGenresMovies() {
@@ -220,8 +216,6 @@ export default class App extends React.Component {
   }
 
   changeTab(key) {
-    const { currentPageRated } = this.state;
-
     if (key === 'search') {
       this.setState(() => {
         return {
@@ -236,15 +230,12 @@ export default class App extends React.Component {
           onRatedPage: true,
         };
       });
-
-      this.getRatedMovies(currentPageRated);
     }
   }
 
   render() {
     const {
       data,
-      dataRated,
       value,
       isLoading,
       isError,
@@ -265,7 +256,7 @@ export default class App extends React.Component {
     );
     const CardListRated = (
       <CardList
-        data={dataRated}
+        data={data}
         changePage={this.changePage}
         page={currentPageRated}
         putGuestRating={this.putGuestRating}
