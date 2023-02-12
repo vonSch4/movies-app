@@ -45,5 +45,13 @@ export default function TabsMenu(props) {
     },
   ];
 
-  return <Tabs items={tabsItems} size="large" onChange={changeTab} />;
+  return (
+    <Tabs
+      defaultActiveKey="search"
+      items={tabsItems}
+      size="large"
+      onChange={changeTab}
+      centered
+    />
+  );
 }

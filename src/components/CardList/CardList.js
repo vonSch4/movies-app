@@ -1,4 +1,4 @@
-import { Space, Pagination, Alert } from 'antd';
+import { Pagination, Alert } from 'antd';
 
 import { MovieServiceConsumer } from '../MovieServiceContext';
 import Card from '../Card';
@@ -37,7 +37,7 @@ export default function CardList(props) {
   }
 
   return (
-    <Space direction="vertical" align="center" size={30}>
+    <>
       <ul className="card-list">{cards}</ul>
       <Pagination
         className="pagination"
@@ -50,6 +50,6 @@ export default function CardList(props) {
         hideOnSinglePage
         onChange={changePage}
       />
-    </Space>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 .card-list {
-  width: 75%;
-  margin: 0 auto;
+  width: 80%;
+  margin-bottom: 30px;
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(525px, 1fr));
@@ -10,14 +10,6 @@
 
 .pagination {
   margin-bottom: 30px;
-}
-
-.ant-space {
-  width: 100%;
-}
-
-.ant-space-item {
-  width: 100%;
 }
 
 .ant-pagination {
