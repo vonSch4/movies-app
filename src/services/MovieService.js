@@ -23,7 +23,7 @@ export default class MovieService {
 
   static transformResultsData(data) {
     const posterPath = data.poster_path
-      ? `https://image.tmdb.org/t/p/original${data.poster_path}`
+      ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
       : '';
 
     const avgRating = Number.isInteger(data.vote_average)
