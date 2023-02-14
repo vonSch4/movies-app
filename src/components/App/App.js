@@ -105,8 +105,14 @@ export default class App extends React.Component {
 
   onMoviesLoaded(data) {
     this.setState(() => {
-      return { data, isLoading: false, isError: false };
+      return { data };
     });
+
+    setTimeout(() => {
+      this.setState(() => {
+        return { isLoading: false, isError: false };
+      });
+    }, 300);
   }
 
   onErrorLoading() {

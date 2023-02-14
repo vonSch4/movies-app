@@ -69,7 +69,7 @@ export default class MovieService {
 
     return data.success
       ? data
-      : new Error(`Error: failed create guest session}`);
+      : new Error(`Error: failed create guest session`);
   }
 
   async putGuestRating(movieId, guestSessionId, rating) {
