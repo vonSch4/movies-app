@@ -1,6 +1,6 @@
 import { Pagination, Alert } from 'antd';
 
-import { MovieServiceConsumer } from '../MovieServiceContext';
+import { GenresListConsumer } from '../GenresListContext';
 import Card from '../Card';
 
 import './CardList.css';
@@ -12,7 +12,7 @@ export default function CardList(props) {
 
   const cards = results.map((el) => {
     return (
-      <MovieServiceConsumer key={el.id}>
+      <GenresListConsumer key={el.id}>
         {(genresList) => {
           return (
             <Card
@@ -22,11 +22,11 @@ export default function CardList(props) {
             />
           );
         }}
-      </MovieServiceConsumer>
+      </GenresListConsumer>
     );
   });
 
-  if (cards.length === 0) {
+  if (!cards.length) {
     return (
       <Alert
         message="Oops"

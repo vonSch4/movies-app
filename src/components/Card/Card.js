@@ -38,9 +38,7 @@ export default function Card({ data, genresList, putGuestRating }) {
       <div className="movie-info">
         <div className="title">
           <h2 className="title-text">{title}</h2>
-          <span className="title-rating" style={{ border }}>
-            {avgRating}
-          </span>
+          <span className={`title-rating ${border}`}>{avgRating}</span>
         </div>
         <span className="date">{formattedDate}</span>
         <div className="tags">{genresTags}</div>

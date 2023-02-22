@@ -13,10 +13,10 @@ function formatDate(date) {
 }
 
 function setBorderStyle(value) {
-  if (value <= 3) return '3px solid #E90000';
-  if (value > 3 && value <= 5) return '3px solid #E97E00';
-  if (value > 5 && value <= 7) return '3px solid #E9D100';
-  return '3px solid #66E900';
+  if (value <= 3) return 'rating-red';
+  if (value > 3 && value <= 5) return 'rating-orange';
+  if (value > 5 && value <= 7) return 'rating-yellow';
+  return 'rating-green';
 }
 
 export { reduceDescription, formatDate, setBorderStyle };

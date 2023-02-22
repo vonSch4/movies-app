@@ -1,5 +1,4 @@
 import { Tabs } from 'antd';
-import { Online } from 'react-detect-offline';
 
 import './TabsMenu.css';
 
@@ -7,7 +6,9 @@ export default function TabsMenu(props) {
   const {
     children: Header,
     changeTab,
+    tabs,
     loadingError,
+    networkError,
     loadingSpinner,
     cardListSearch,
     cardListRated,
@@ -15,39 +16,35 @@ export default function TabsMenu(props) {
 
   const tabsItems = [
     {
-      key: 'search',
-      label: 'Search',
+      key: tabs.search,
+      label: tabs.search,
       children: (
         <>
           {Header}
-          <Online>
-            <main className="main">
-              {loadingError}
-              {loadingSpinner}
-              {cardListSearch}
-            </main>
-          </Online>
+          <main className="main">
+            {networkError || loadingError}
+            {loadingSpinner}
+            {cardListSearch}
+          </main>
         </>
       ),
     },
     {
-      key: 'rated',
-      label: 'Rated',
+      key: tabs.rated,
+      label: tabs.rated,
       children: (
-        <Online>
-          <main className="main">
-            {loadingError}
-            {loadingSpinner}
-            {cardListRated}
-          </main>
-        </Online>
+        <main className="main">
+          {networkError || loadingError}
+          {loadingSpinner}
+          {cardListRated}
+        </main>
       ),
     },
   ];
 
   return (
     <Tabs
-      defaultActiveKey="search"
+      defaultActiveKey={tabs.search}
       items={tabsItems}
       size="large"
       onChange={changeTab}

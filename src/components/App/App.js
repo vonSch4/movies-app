@@ -1,45 +1,37 @@
 import React from 'react';
-import { Offline } from 'react-detect-offline';
 
 import './App.css';
 
-import MovieService from '../../services';
-import { MovieServiceProvider } from '../MovieServiceContext';
+import movieService from '../../services';
+import { setItem, getItem } from '../../utils';
+import transformMoviesData from '../../mappers';
+import { GenresListProvider } from '../GenresListContext';
 import TabsMenu from '../TabsMenu';
 import Header from '../Header';
 import CardList from '../CardList';
 import Spinner from '../Spinner';
 import ErrorMessage from '../ErrorMessage';
 
-const err = {
-  loadErr: {
-    m: 'Content loading error',
-    d: `An error occurred while downloading movies.
+const errors = {
+  loadindError: {
+    message: 'Content loading error',
+    description: `An error occurred while downloading movies.
     For users from Russia: you need to enable VPN.`,
   },
-  netErr: {
-    m: 'Network error',
-    d: 'There is no Internet connection.',
+  networkError: {
+    message: 'Network error',
+    description: 'There is no Internet connection.',
   },
 };
 
+const tabs = {
+  search: 'Search',
+  rated: 'Rated',
+};
+
 export default class App extends React.Component {
-  static saveToLocalStorage(key, value) {
-    localStorage.setItem(key, value);
-  }
-
-  movieService = new MovieService();
-
   constructor(props) {
     super(props);
-    this.onMoviesLoaded = this.onMoviesLoaded.bind(this);
-    this.onErrorLoading = this.onErrorLoading.bind(this);
-    this.onInputSearch = this.onInputSearch.bind(this);
-    this.putGuestRating = this.putGuestRating.bind(this);
-    this.getRatedMovies = this.getRatedMovies.bind(this);
-    this.getPopularMovies = this.getPopularMovies.bind(this);
-    this.changePage = this.changePage.bind(this);
-    this.changeTab = this.changeTab.bind(this);
     this.state = {
       data: {},
       genresList: [],
@@ -49,7 +41,7 @@ export default class App extends React.Component {
       value: '',
       currentPage: 1,
       currentPageRated: 1,
-      guestSessionId: localStorage.getItem('guestSessionId'),
+      guestSessionId: getItem('guestSessionId'),
     };
   }
 
@@ -65,31 +57,9 @@ export default class App extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     const { value, currentPage, currentPageRated, onRatedPage } = this.state;
 
-    if (!onRatedPage) {
-      if (value && value !== prevState.value) {
-        this.getFoundMovies(value, currentPage);
-        return;
-      }
-
-      if (value && currentPage !== prevState.currentPage) {
-        this.getFoundMovies(value, currentPage);
-        return;
-      }
-
-      if (!value && value !== prevState.value) {
-        this.getPopularMovies(currentPage);
-        return;
-      }
-
-      if (!value && currentPage !== prevState.currentPage) {
-        this.getPopularMovies(currentPage);
-        return;
-      }
-
-      if (onRatedPage !== prevState.onRatedPage) {
-        if (value) this.getFoundMovies(value, currentPage);
-        if (!value) this.getPopularMovies(currentPage);
-      }
+    if (!onRatedPage && onRatedPage !== prevState.onRatedPage) {
+      if (value) this.getFoundMovies(value, currentPage);
+      if (!value) this.getPopularMovies(currentPage);
     }
 
     if (onRatedPage) {
@@ -103,9 +73,9 @@ export default class App extends React.Component {
     }
   }
 
-  onMoviesLoaded(data) {
+  onMoviesLoaded = (data) => {
     this.setState(() => {
-      return { data };
+      return { data: transformMoviesData(data) };
     });
 
     setTimeout(() => {
@@ -113,24 +83,27 @@ export default class App extends React.Component {
         return { isLoading: false, isError: false };
       });
     }, 300);
-  }
+  };
 
-  onErrorLoading() {
+  onErrorLoading = () => {
     this.setState(() => {
       return { isLoading: false, isError: true };
     });
-  }
+  };
 
-  onInputSearch(value) {
+  onInputSearch = (value) => {
     this.setState(() => {
       return {
         value,
         currentPage: 1,
       };
     });
-  }
 
-  getFoundMovies(value, page) {
+    if (value) this.getFoundMovies(value);
+    if (!value) this.getPopularMovies();
+  };
+
+  getFoundMovies = (value, page) => {
     this.setState(() => {
       return {
         isLoading: true,
@@ -138,12 +111,13 @@ export default class App extends React.Component {
       };
     });
 
-    this.movieService
+    movieService
       .getFoundMovies(value, page)
-      .then(this.onMoviesLoaded, this.onErrorLoading);
-  }
+      .then(this.onMoviesLoaded)
+      .catch(this.onErrorLoading);
+  };
 
-  getPopularMovies(page) {
+  getPopularMovies = (page) => {
     this.setState(() => {
       return {
         isLoading: true,
@@ -151,12 +125,13 @@ export default class App extends React.Component {
       };
     });
 
-    this.movieService
+    movieService
       .getPopularMovies(page)
-      .then(this.onMoviesLoaded, this.onErrorLoading);
-  }
+      .then(this.onMoviesLoaded)
+      .catch(this.onErrorLoading);
+  };
 
-  getRatedMovies(page) {
+  getRatedMovies = (page) => {
     const { guestSessionId } = this.state;
 
     this.setState(() => {
@@ -167,34 +142,38 @@ export default class App extends React.Component {
       };
     });
 
-    this.movieService
+    movieService
       .getRatedMovies(guestSessionId, page)
-      .then(this.onMoviesLoaded, this.onErrorLoading);
-  }
+      .then(this.onMoviesLoaded)
+      .catch(this.onErrorLoading);
+  };
 
-  getGenresMovies() {
-    this.movieService.getGenresMovies().then((genres) => {
-      this.setState(() => {
-        return {
-          genresList: genres,
-        };
-      });
-    });
-  }
+  getGenresMovies = () => {
+    movieService
+      .getGenresMovies()
+      .then((genres) => {
+        this.setState(() => {
+          return {
+            genresList: genres,
+          };
+        });
+      })
+      .catch(this.onErrorLoading);
+  };
 
-  putGuestRating(movieId, value) {
+  putGuestRating = (movieId, value) => {
     const { guestSessionId } = this.state;
 
-    const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || {};
+    const ratedMovies = getItem('ratedMovies') || {};
     ratedMovies[movieId] = value;
 
-    App.saveToLocalStorage('ratedMovies', JSON.stringify(ratedMovies));
+    setItem('ratedMovies', ratedMovies);
 
-    this.movieService.putGuestRating(movieId, guestSessionId, value);
-  }
+    movieService.putGuestRating(movieId, guestSessionId, value);
+  };
 
-  createGuestSession() {
-    this.movieService
+  createGuestSession = () => {
+    movieService
       .createGuestSession()
       .then(({ guest_session_id: guestSessionId }) => {
         this.setState(() => {
@@ -203,11 +182,11 @@ export default class App extends React.Component {
           };
         });
 
-        App.saveToLocalStorage('guestSessionId', guestSessionId);
+        setItem('guestSessionId', guestSessionId);
       });
-  }
+  };
 
-  changePage(page) {
+  changePage = (page) => {
     this.setState((prevState) => {
       if (prevState.onRatedPage) {
         return {
@@ -219,10 +198,15 @@ export default class App extends React.Component {
         currentPage: page,
       };
     });
-  }
 
-  changeTab(key) {
-    if (key === 'search') {
+    const { value } = this.state;
+
+    if (value) this.getFoundMovies(value, page);
+    if (!value) this.getPopularMovies(page);
+  };
+
+  changeTab = (key) => {
+    if (key === tabs.search) {
       this.setState(() => {
         return {
           onRatedPage: false,
@@ -230,14 +214,14 @@ export default class App extends React.Component {
       });
     }
 
-    if (key === 'rated') {
+    if (key === tabs.rated) {
       this.setState(() => {
         return {
           onRatedPage: true,
         };
       });
     }
-  }
+  };
 
   render() {
     const {
@@ -250,8 +234,18 @@ export default class App extends React.Component {
       genresList,
     } = this.state;
 
-    const LoadError = <ErrorMessage mes={err.loadErr.m} desc={err.loadErr.d} />;
-    const NetError = <ErrorMessage mes={err.netErr.m} desc={err.netErr.d} />;
+    const LoadingError = (
+      <ErrorMessage
+        message={errors.loadindError.message}
+        description={errors.loadindError.description}
+      />
+    );
+    const NetworkError = (
+      <ErrorMessage
+        message={errors.networkError.message}
+        description={errors.networkError.description}
+      />
+    );
     const CardListSearch = (
       <CardList
         data={data}
@@ -271,26 +265,26 @@ export default class App extends React.Component {
 
     const hasData = !(isLoading || isError);
 
-    const loadingError = isError && LoadError;
+    const networkError = !navigator.onLine && NetworkError;
+    const loadingError = isError && LoadingError;
     const loadingSpinner = isLoading && <Spinner />;
     const cardListSearch = hasData && CardListSearch;
     const cardListRated = hasData && CardListRated;
 
     return (
-      <MovieServiceProvider value={genresList}>
+      <GenresListProvider value={genresList}>
         <TabsMenu
           changeTab={this.changeTab}
+          tabs={tabs}
           loadingError={loadingError}
+          networkError={networkError}
           loadingSpinner={loadingSpinner}
           cardListSearch={cardListSearch}
           cardListRated={cardListRated}
         >
           <Header onInputSearch={this.onInputSearch} value={value} />
         </TabsMenu>
-        <Offline>
-          <main className="main">{NetError}</main>
-        </Offline>
-      </MovieServiceProvider>
+      </GenresListProvider>
     );
   }
 }
